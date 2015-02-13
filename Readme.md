@@ -16,7 +16,8 @@ Example:
 
 ### Roadmap
 - [ ] Add a datestamp for Index.html
-- [ ] SELECT * FROM AllBlogPosts ORDER BY DatePosted DESC / ASC
+- [ ] 'SELECT * FROM AllBlogPosts ORDER BY DatePosted DESC / ASC'
+- [ ] Download the embed pictures
 - [ ] Intergrate Calibre lib to generate eBook in one place
 
 ### License
@@ -40,7 +41,8 @@ SBB.py <新浪博客地址>
 
 ### Roadmap
 - [ ] 首页增加时间戳
-- [ ] SELECT * FROM AllBlogPosts ORDER BY DatePosted DESC / ASC
+- [ ] 'SELECT * FROM AllBlogPosts ORDER BY DatePosted DESC / ASC'
+- [ ] 增加下载图片选项
 - [ ] 整合 Calibre 库，一站式打包成 .mobi 或 .ePub
 
 ### 授权
