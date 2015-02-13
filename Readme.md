@@ -5,7 +5,7 @@
 Based on these downloaded HTML files, you might generate an ebook by importing into [Calibre](http://calibre-ebook.com/). Or, you can simply save them anywhere as archives.
 
 ### Usage
-SBB.py <Sina blog URL>
+SBB.py (Sina blog URL)
 
 Example:
 
