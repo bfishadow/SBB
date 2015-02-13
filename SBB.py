@@ -2,59 +2,70 @@
 # -*- coding: utf-8 -*-
 
 __version__ = '0.01'
-__author__ = 'Julien G. (@bfishadow)'
+__author__  = 'Julien G. (@bfishadow)'
 
 '''
 This script will download all artcles from a specific Sina Blog.
-You might generate an ebook based on these HTML files.
-Or simply save them as archives.
+Based on these HTML files, you might generate an ebook by importing into Calibre.
+Or simply save them anywhere as archives.
 '''
 
-import urllib2
+import sys, urllib2
 
 def getBetween(str, str1, str2):
   strOutput = str[str.find(str1)+len(str1):str.find(str2)]
   return strOutput
 
-def getArticle(strURL):
+strUsage = "Usage: SBB.py <Sina blog URL>\n\nExample:\nSBB.py http://blog.sina.com.cn/gongmin\nSBB.py http://blog.sina.com.cn/u/1239657051\n"
 
-'''
-"<!-- 正文开始 -->"
-"<!-- 正文结束 -->"
-<link href="http://simg.sinajs.cn/blog7style/css/conf/blog/article.css" type="text/css" rel="stylesheet" />
+#Step 0: get target blog homepage URL
+try :
+  strUserInput = sys.argv[1]
+except :
+  print strUsage
+  sys.exit(0)
 
-'''
+#The URL *must* start with http://blog.sina.com.cn/, otherwise the universe will be destroied XD
+if strUserInput.find("http://blog.sina.com.cn/") == -1 or len(strUserInput) <= 24 :
+  print strUsage
+  sys.exit(0)
 
-  return
+#Get UID for the blog, UID is critical.
+objResponse = urllib2.urlopen(strUserInput)
+strResponse = objResponse.read()
+objResponse.close()
 
-strTargetUID = "2488313871"
+strUID = getBetween(getBetween(strResponse, "format=html5;", "format=wml;"), "/blog/u/", '">')
 
-#first Load: get list for first page and article count
-strTargetBlogURL = "http://blog.sina.com.cn/s/articlelist_" + strTargetUID + "_0_1.html"
+if len(strUID) > 10 :
+  print strUsage
+  sys.exit(0)
 
-'''
-List URL Scheme -> http://blog.sina.com.cn/s/articlelist_[UID]_[Category ID]_[Page Number].html
-e.g.
-http://blog.sina.com.cn/s/articlelist_2488313871_0_2.html
-http://blog.sina.com.cn/s/articlelist_2488313871_0_3.html
-'''
+#Here's the UID. Most of the UID is a string of ten digits.
+strTargetUID = strUID
 
-objResponse = urllib2.urlopen(strTargetBlogURL)
+
+#Step 1: get list for first page and article count
+strTargetBlogListURL = "http://blog.sina.com.cn/s/articlelist_" + strTargetUID + "_0_1.html"
+
+objResponse = urllib2.urlopen(strTargetBlogListURL)
 strResponse = objResponse.read()
 objResponse.close()
 
 strBlogPostList = getBetween(getBetween(strResponse,"$blogArticleSortArticleids","$blogArticleCategoryids"), " : [", "],")
-
 strBlogPostID = strBlogPostList
 
 strBlogPageCount = getBetween(getBetween(strResponse, "全部博文", "<!--第一列end-->"),"<em>(", ")</em>")
 intBlogPostCount = int(strBlogPageCount)  #article count
 intPageCount = int(intBlogPostCount/50)+1 #page count, default page size is 50
 
-#Second load: get list for the rest of pages
+strBlogName = getBetween(getBetween(strResponse, "<title>", "</title>"), "博文_", "_新浪博客")
+
+
+#Step 2: get list for the rest of pages
 for intCurrentPage in range(intPageCount - 1) :
-  strTargetBlogURL = "http://blog.sina.com.cn/s/articlelist_" + strTargetUID + "_0_" + str(intCurrentPage + 2) + ".html"
-  objResponse = urllib2.urlopen(strTargetBlogURL)
+  strTargetBlogListURL = "http://blog.sina.com.cn/s/articlelist_" + strTargetUID + "_0_" + str(intCurrentPage + 2) + ".html"
+  objResponse = urllib2.urlopen(strTargetBlogListURL)
   strResponse = objResponse.read()
   strBlogPostList = getBetween(getBetween(strResponse,"$blogArticleSortArticleids","$blogArticleCategoryids"), " : [", "],")
   strBlogPostID = strBlogPostID + "," + strBlogPostList
@@ -64,24 +75,42 @@ strBlogPostID = strBlogPostID.replace('"','')
 #strBlogPostID <- this string has all article IDs for current blog
 
 
-#Third load: get all articles one by one
-
-'''
-Blog page URL Scheme -> http://blog.sina.com.cn/s/blog_[Article ID].html
-'''
+#Step 3: get all articles one by one
 
 arrBlogPost = strBlogPostID.split(',')
 intCounter = 0
+strHTML4Index = ""
+
 for strCurrentBlogPostID in arrBlogPost :
   intCounter = intCounter + 1
-  print intCounter, "http://blog.sina.com.cn/s/blog_" + strCurrentBlogPostID + ".html"
+  strTargetBlogPostURL = "http://blog.sina.com.cn/s/blog_" + strCurrentBlogPostID + ".html"
+  objResponse = urllib2.urlopen(strTargetBlogPostURL)
+  strPageCode = objResponse.read()
+  objResponse.close()
 
-strTargetBlogPostURL = "http://blog.sina.com.cn/main_v5/ria/print.html?blog_id=blog_9450a80f0102vbwd"
+  #Parse blog title
+  strBlogPostTitle = getBetween(strPageCode, "<title>", "</title>")
+  strBlogPostTitle = strBlogPostTitle.replace("_新浪博客", "")
+  strBlogPostTitle = strBlogPostTitle.replace("_" + strBlogName, "")
 
+  #Parse blog post
+  strBlogPostBody  = getBetween(strPageCode, "<!-- 正文开始 -->", "<!-- 正文结束 -->")
+  strBlogPostBody  = strBlogPostBody.replace("http://simg.sinajs.cn/blog7style/images/common/sg_trans.gif", "")
+  strBlogPostBody  = strBlogPostBody.replace('src=""', "")
+  strBlogPostBody  = strBlogPostBody.replace("real_src =", "src =")
 
+  #Write into local file
+  strLocalFilename = "Post_" + str(intCounter) + "_" + strCurrentBlogPostID + ".html"
+  strHTML4Post = "<html>\n<head>\n<meta http-equiv=""Content-Type"" content=""text/html; charset=utf-8"" />\n<title>" + strBlogPostTitle + "</title>\n<link href=""http://simg.sinajs.cn/blog7style/css/conf/blog/article.css"" type=""text/css"" rel=""stylesheet"" />\n</head>\n<body>\n<h2>" + strBlogPostTitle + "</h2>\n<p>By: <em>" + strBlogName + "</em></p>\n" + strBlogPostBody + "\n<p><a href=""index.html"">返回目录</a></p>\n</body>\n</html>"
+  objFileArticle = open(strLocalFilename, "w")
+  objFileArticle.write(strHTML4Post);
+  objFileArticle.close
 
+  strHTML4Index = strHTML4Index + '<li><a href="' + strLocalFilename + '">' + strBlogPostTitle + '</a></li>\n'
 
+  print intCounter , "/", intBlogPostCount
 
-
-
-
+strHTML4Index = "<html>\n<head>\n<meta http-equiv=""Content-Type"" content=""text/html; charset=utf-8"" />\n<title>" + strBlogName + "博客文章汇总</title>\n</head>\n<body>\n<h2>新浪博客：" + strBlogName + "</h2>\n<ul>\n" + strHTML4Index + "\n</ul>\n</body>\n</html>"
+objFileIndex = open("index.html", "w")
+objFileIndex.write(strHTML4Index);
+objFileIndex.close
