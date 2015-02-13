@@ -8,7 +8,9 @@ Based on these downloaded HTML files, you might generate an ebook by importing i
 SBB.py <Sina blog URL>
 
 Example:
+
 SBB.py http://blog.sina.com.cn/gongmin
+
 SBB.py http://blog.sina.com.cn/u/1239657051
 
 ### License
@@ -23,7 +25,9 @@ Licensed under the Apache License, Version 2.0
 SBB.py <新浪博客地址>
 
 例子：
+
 SBB.py http://blog.sina.com.cn/gongmin
+
 SBB.py http://blog.sina.com.cn/u/1239657051
 
 ### 授权
