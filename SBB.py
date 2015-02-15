@@ -11,12 +11,13 @@ Or simply save them anywhere as archives.
 '''
 
 import sys, urllib2
+from time import strftime
 
 def getBetween(str, str1, str2):
   strOutput = str[str.find(str1)+len(str1):str.find(str2)]
   return strOutput
 
-strUsage = "Usage: SBB.py <Sina blog URL>\n\nExample:\nSBB.py http://blog.sina.com.cn/gongmin\nSBB.py http://blog.sina.com.cn/u/1239657051\n"
+strUsage = "Usage: SBB.py <Sina blog URL> [asc]\n\nExample:\nSBB.py http://blog.sina.com.cn/gongmin desc\nSBB.py http://blog.sina.com.cn/u/1239657051\n"
 
 #Step 0: get target blog homepage URL
 try :
@@ -24,6 +25,11 @@ try :
 except :
   print strUsage
   sys.exit(0)
+
+try :
+  strUserOrder = sys.argv[2]
+except :
+  strUserOrder = ""
 
 #The URL *must* start with http://blog.sina.com.cn/, otherwise the universe will be destroied XD
 if strUserInput.find("http://blog.sina.com.cn/") == -1 or len(strUserInput) <= 24 :
@@ -78,11 +84,14 @@ strBlogPostID = strBlogPostID.replace('"','')
 #Step 3: get all articles one by one
 
 arrBlogPost = strBlogPostID.split(',')
-intCounter = 0
+if strUserOrder != "desc" :
+  arrBlogPost.reverse()
+
+intCounter    = 0
 strHTML4Index = ""
 
 for strCurrentBlogPostID in arrBlogPost :
-  intCounter = intCounter + 1
+  intCounter  = intCounter + 1
   strTargetBlogPostURL = "http://blog.sina.com.cn/s/blog_" + strCurrentBlogPostID + ".html"
   objResponse = urllib2.urlopen(strTargetBlogPostURL)
   strPageCode = objResponse.read()
@@ -99,9 +108,12 @@ for strCurrentBlogPostID in arrBlogPost :
   strBlogPostBody  = strBlogPostBody.replace('src=""', "")
   strBlogPostBody  = strBlogPostBody.replace("real_src =", "src =")
 
+  #Parse blog timestamp
+  strBlogPostTime  = getBetween(strPageCode, '<span class="time SG_txtc">(', ')</span><div class="turnBoxzz">')
+
   #Write into local file
   strLocalFilename = "Post_" + str(intCounter) + "_" + strCurrentBlogPostID + ".html"
-  strHTML4Post = "<html>\n<head>\n<meta http-equiv=""Content-Type"" content=""text/html; charset=utf-8"" />\n<title>" + strBlogPostTitle + "</title>\n<link href=""http://simg.sinajs.cn/blog7style/css/conf/blog/article.css"" type=""text/css"" rel=""stylesheet"" />\n</head>\n<body>\n<h2>" + strBlogPostTitle + "</h2>\n<p>By: <em>" + strBlogName + "</em></p>\n" + strBlogPostBody + "\n<p><a href=""index.html"">返回目录</a></p>\n</body>\n</html>"
+  strHTML4Post = "<html>\n<head>\n<meta http-equiv=""Content-Type"" content=""text/html; charset=utf-8"" />\n<title>" + strBlogPostTitle + "</title>\n<link href=""http://simg.sinajs.cn/blog7style/css/conf/blog/article.css"" type=""text/css"" rel=""stylesheet"" />\n</head>\n<body>\n<h2>" + strBlogPostTitle + "</h2>\n<p>By: <em>" + strBlogName + "</em> 原文发布于：<em>" + strBlogPostTime + "</em></p>\n" + strBlogPostBody + "\n<p><a href=""index.html"">返回目录</a></p>\n</body>\n</html>"
   objFileArticle = open(strLocalFilename, "w")
   objFileArticle.write(strHTML4Post);
   objFileArticle.close
@@ -110,7 +122,8 @@ for strCurrentBlogPostID in arrBlogPost :
 
   print intCounter , "/", intBlogPostCount
 
-strHTML4Index = "<html>\n<head>\n<meta http-equiv=""Content-Type"" content=""text/html; charset=utf-8"" />\n<title>" + strBlogName + "博客文章汇总</title>\n</head>\n<body>\n<h2>新浪博客：" + strBlogName + "</h2>\n<ul>\n" + strHTML4Index + "\n</ul>\n</body>\n</html>"
+strCurrentTimestamp = str(strftime("%Y-%m-%d %H:%M:%S"))
+strHTML4Index = "<html>\n<head>\n<meta http-equiv=""Content-Type"" content=""text/html; charset=utf-8"" />\n<title>" + strBlogName + "博客文章汇总</title>\n</head>\n<body>\n<h2>新浪博客：" + strBlogName + "</h2>\n<p>共" + str(intBlogPostCount) + "篇文章，最后更新：<em>" + strCurrentTimestamp + "</em></p>\n<ol>\n" + strHTML4Index + "\n</ol>\n</body>\n</html>"
 objFileIndex = open("index.html", "w")
 objFileIndex.write(strHTML4Index);
 objFileIndex.close
