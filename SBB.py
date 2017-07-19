@@ -6,7 +6,7 @@ __author__  = 'Julien G. (@bfishadow)'
 
 '''
 This script will download all artcles from a specific Sina Blog.
-Based on these HTML files, you might generate an ebook by importing into Calibre.
+Based on these HTML files, you might generate an ebook by importing into Calibre, or use KindleGen by Amazon.
 Or simply save them anywhere as archives.
 '''
 

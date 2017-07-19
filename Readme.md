@@ -25,12 +25,6 @@ The sort order argument is optional. By default, articles will be sorted chronic
 ## License
 Licensed under the Apache License, Version 2.0
 
-##Change log
-
-###Feb 15, 2015
-
-- [ADDED] timestamp for index and articles.
-- [ADDED] sort option. Ascending by default.
 
 #中文
 
@@ -58,10 +52,3 @@ SBB.py (新浪博客地址) (desc|asc)
 
 ## 授权
 Licensed under the Apache License, Version 2.0
-
-##升级日志
-
-###2015年2月15日
-
-- [增加] 索引页面和文章页面增加时间戳。
-- [增加] 文章排序选项，默认按发表时间顺序排列。
