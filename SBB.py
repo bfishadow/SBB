@@ -93,6 +93,9 @@ strHTML4Index = ""
 for strCurrentBlogPostID in arrBlogPost :
   intCounter  = intCounter + 1
   strTargetBlogPostURL = "http://blog.sina.com.cn/s/blog_" + strCurrentBlogPostID + ".html"
+  if not strCurrentBlogPostID.strip():
+      print(strCurrentBlogPostID)
+      continue
   objResponse = urllib2.urlopen(strTargetBlogPostURL)
   strPageCode = objResponse.read()
   objResponse.close()
@@ -109,11 +112,24 @@ for strCurrentBlogPostID in arrBlogPost :
   strBlogPostBody  = strBlogPostBody.replace("real_src =", "src =")
 
   #Parse blog timestamp
-  strBlogPostTime  = getBetween(strPageCode, '<span class="time SG_txtc">(', ')</span><div class="turnBoxzz">')
+  strBlogPostTime  = getBetween(strPageCode, '<span class="time SG_txtc">(', ')</span>')
+  strBlogPostTime = strBlogPostTime[:]
 
   #Write into local file
-  strLocalFilename = "Post_" + str(intCounter) + "_" + strCurrentBlogPostID + ".html"
   strHTML4Post = "<html>\n<head>\n<meta http-equiv=""Content-Type"" content=""text/html; charset=utf-8"" />\n<title>" + strBlogPostTitle + "</title>\n<link href=""http://simg.sinajs.cn/blog7style/css/conf/blog/article.css"" type=""text/css"" rel=""stylesheet"" />\n</head>\n<body>\n<h2>" + strBlogPostTitle + "</h2>\n<p>By: <em>" + strBlogName + "</em> 原文发布于：<em>" + strBlogPostTime + "</em></p>\n" + strBlogPostBody + "\n<p><a href=""index.html"">返回目录</a></p>\n</body>\n</html>"
+
+  f_title = strBlogPostTitle
+  f_title = f_title.replace('\"', '')
+  f_title = f_title.replace('?', '')
+  f_title = f_title.replace('<', '')
+  f_title = f_title.replace('>', '')
+  f_title = f_title.replace(':', '')
+  f_title = f_title.replace('"', '')
+  f_title = f_title.replace('|', '')
+  f_title = f_title.replace('/', '')
+
+  strLocalFilename = "Post_" + str(intCounter) + "_" + strCurrentBlogPostID + "_" + f_title + ".html"
+  print strLocalFilename
   objFileArticle = open(strLocalFilename, "w")
   objFileArticle.write(strHTML4Post);
   objFileArticle.close
@@ -121,7 +137,6 @@ for strCurrentBlogPostID in arrBlogPost :
   strHTML4Index = strHTML4Index + '<li><a href="' + strLocalFilename + '">' + strBlogPostTitle + '</a></li>\n'
 
   print intCounter , "/", intBlogPostCount
-
 strCurrentTimestamp = str(strftime("%Y-%m-%d %H:%M:%S"))
 strHTML4Index = "<html>\n<head>\n<meta http-equiv=""Content-Type"" content=""text/html; charset=utf-8"" />\n<title>" + strBlogName + "博客文章汇总</title>\n</head>\n<body>\n<h2>新浪博客：" + strBlogName + "</h2>\n<p>共" + str(intBlogPostCount) + "篇文章，最后更新：<em>" + strCurrentTimestamp + "</em></p>\n<ol>\n" + strHTML4Index + "\n</ol>\n</body>\n</html>"
 objFileIndex = open("index.html", "w")
