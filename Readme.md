@@ -19,7 +19,7 @@ The sort order argument is optional. By default, articles will be sorted chronic
 ## Roadmap
 - [x] Add a datestamp for Index.html
 - [x] 'SELECT * FROM AllBlogPosts ORDER BY DatePosted DESC / ASC'
-- [ ] Download the embed pictures
+- [x] Download the embed pictures
 - [ ] Intergrate Calibre lib to generate eBook in one place
 
 ## License
@@ -47,7 +47,7 @@ SBB.py (新浪博客地址) (desc|asc)
 ## Roadmap
 - [x] 首页增加时间戳
 - [x] 'SELECT * FROM AllBlogPosts ORDER BY DatePosted DESC / ASC'
-- [ ] 增加下载图片选项
+- [x] 同时下载图片选项
 - [ ] 整合 Calibre 库，一站式打包成 .mobi 或 .ePub
 
 ## 授权
