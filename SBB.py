@@ -10,12 +10,37 @@ Based on these HTML files, you might generate an ebook by importing into Calibre
 Or simply save them anywhere as archives.
 '''
 
-import sys, urllib2
+import sys, urllib2, urllib, os
 from time import strftime
 
 def getBetween(str, str1, str2):
   strOutput = str[str.find(str1)+len(str1):str.find(str2)]
   return strOutput
+
+def extract_in(str, str1, str2):
+  begin = str.find(str1)+len(str1)
+  end = str.find(str2, begin)
+  strOutput = str[begin:end]
+  return strOutput, end
+
+# getBetween = extract_in
+
+def getImageMap(post_body):
+  res_list = []
+  # print post_body
+  tmp, i_end = extract_in(post_body, '<img  src ="', '"')
+  print tmp
+  while tmp:
+    print tmp
+    res_list.append(tmp)
+    tmp, i_end = extract_in(post_body[i_end], "<img  src =", '"')
+  return res_list
+
+
+try:
+    os.mkdir("images")
+except OSError:
+    pass
 
 strUsage = "Usage: SBB.py <Sina blog URL> [asc]\n\nExample:\nSBB.py http://blog.sina.com.cn/gongmin desc\nSBB.py http://blog.sina.com.cn/u/1239657051\n"
 
@@ -49,7 +74,7 @@ if len(strUID) > 10 :
 
 #Here's the UID. Most of the UID is a string of ten digits.
 strTargetUID = strUID
-
+print strTargetUID
 
 #Step 1: get list for first page and article count
 strTargetBlogListURL = "http://blog.sina.com.cn/s/articlelist_" + strTargetUID + "_0_1.html"
@@ -93,6 +118,10 @@ strHTML4Index = ""
 for strCurrentBlogPostID in arrBlogPost :
   intCounter  = intCounter + 1
   strTargetBlogPostURL = "http://blog.sina.com.cn/s/blog_" + strCurrentBlogPostID + ".html"
+  # strTargetBlogPostURL= "http://blog.sina.com.cn/s/blog_631d3a630102xaco.html"
+  if not strCurrentBlogPostID.strip():
+      print(strCurrentBlogPostID)
+      continue
   objResponse = urllib2.urlopen(strTargetBlogPostURL)
   strPageCode = objResponse.read()
   objResponse.close()
@@ -108,12 +137,41 @@ for strCurrentBlogPostID in arrBlogPost :
   strBlogPostBody  = strBlogPostBody.replace('src=""', "")
   strBlogPostBody  = strBlogPostBody.replace("real_src =", "src =")
 
+  if True:
+    png_urls = getImageMap(strBlogPostBody)
+    # print png_urls
+    if png_urls:
+        for idx, val in enumerate(png_urls):
+            if val.find("sinaimg.cn") < 0:
+                print "skip ", val
+                continue
+            else:
+                print "down ", val
+                png_name = "images/" + str(intCounter) + "_" + str(idx) + ".png"
+                strBlogPostBody  = strBlogPostBody.replace(val, png_name)
+                urllib.urlretrieve(val, png_name)
+    else:
+        pass
+
   #Parse blog timestamp
-  strBlogPostTime  = getBetween(strPageCode, '<span class="time SG_txtc">(', ')</span><div class="turnBoxzz">')
+  strBlogPostTime  = getBetween(strPageCode, '<span class="time SG_txtc">(', ')</span>')
+  strBlogPostTime = strBlogPostTime[:]
 
   #Write into local file
-  strLocalFilename = "Post_" + str(intCounter) + "_" + strCurrentBlogPostID + ".html"
   strHTML4Post = "<html>\n<head>\n<meta http-equiv=""Content-Type"" content=""text/html; charset=utf-8"" />\n<title>" + strBlogPostTitle + "</title>\n<link href=""http://simg.sinajs.cn/blog7style/css/conf/blog/article.css"" type=""text/css"" rel=""stylesheet"" />\n</head>\n<body>\n<h2>" + strBlogPostTitle + "</h2>\n<p>By: <em>" + strBlogName + "</em> 原文发布于：<em>" + strBlogPostTime + "</em></p>\n" + strBlogPostBody + "\n<p><a href=""index.html"">返回目录</a></p>\n</body>\n</html>"
+
+  f_title = strBlogPostTitle
+  f_title = f_title.replace('\"', '')
+  f_title = f_title.replace('?', '')
+  f_title = f_title.replace('<', '')
+  f_title = f_title.replace('>', '')
+  f_title = f_title.replace(':', '')
+  f_title = f_title.replace('"', '')
+  f_title = f_title.replace('|', '')
+  f_title = f_title.replace('/', '')
+
+  strLocalFilename = "Post_" + str(intCounter) + "_" + strCurrentBlogPostID + "_" + f_title + ".html"
+  # print strLocalFilename
   objFileArticle = open(strLocalFilename, "w")
   objFileArticle.write(strHTML4Post);
   objFileArticle.close
@@ -121,7 +179,6 @@ for strCurrentBlogPostID in arrBlogPost :
   strHTML4Index = strHTML4Index + '<li><a href="' + strLocalFilename + '">' + strBlogPostTitle + '</a></li>\n'
 
   print intCounter , "/", intBlogPostCount
-
 strCurrentTimestamp = str(strftime("%Y-%m-%d %H:%M:%S"))
 strHTML4Index = "<html>\n<head>\n<meta http-equiv=""Content-Type"" content=""text/html; charset=utf-8"" />\n<title>" + strBlogName + "博客文章汇总</title>\n</head>\n<body>\n<h2>新浪博客：" + strBlogName + "</h2>\n<p>共" + str(intBlogPostCount) + "篇文章，最后更新：<em>" + strCurrentTimestamp + "</em></p>\n<ol>\n" + strHTML4Index + "\n</ol>\n</body>\n</html>"
 objFileIndex = open("index.html", "w")
