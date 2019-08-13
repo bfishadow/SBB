@@ -11,7 +11,7 @@ SBB.py (Sina Blog URL) (asc|desc)
 
 The sort order argument is optional. By default, articles will be sorted chronically (asc).
 
-###Example:
+### Example:
 
 - SBB.py http://blog.sina.com.cn/gongmin desc
 - SBB.py http://blog.sina.com.cn/u/1239657051
@@ -26,7 +26,7 @@ The sort order argument is optional. By default, articles will be sorted chronic
 Licensed under the Apache License, Version 2.0
 
 
-#中文
+# 中文
 
 **SBB**(**S**ina **B**log **B**ook) 是一个用于下载指定新浪博客作者全部文章的脚本。
 
